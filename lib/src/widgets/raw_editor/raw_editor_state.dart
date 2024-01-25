@@ -210,51 +210,6 @@ class QuillRawEditorState extends EditorState
 
     final clipboard = SystemClipboard.instance;
 
-    if (clipboard != null) {
-      // TODO: Bug, Doesn't replace the selected text, it just add a new one
-      final reader = await clipboard.read();
-      if (reader.canProvide(Formats.htmlText)) {
-        final html = await reader.readValue(Formats.htmlText);
-        if (html == null) {
-          return;
-        }
-        final htmlBody = html_parser.parse(html).body?.outerHtml;
-        final deltaFromClipboard = Document.fromHtml(htmlBody ?? html);
-
-        var newDelta = Delta();
-        newDelta = newDelta.compose(deltaFromClipboard);
-        if (!controller.document.isEmpty()) {
-          newDelta = newDelta.compose(controller.document.toDelta());
-        }
-
-        controller
-          ..setContents(
-            newDelta,
-          )
-          ..updateSelection(
-            TextSelection.collapsed(
-              offset: controller.document.length,
-            ),
-            ChangeSource.local,
-          );
-
-        bringIntoView(textEditingValue.selection.extent);
-
-        // Collapse the selection and hide the toolbar and handles.
-        userUpdateTextEditingValue(
-          TextEditingValue(
-            text: textEditingValue.text,
-            selection: TextSelection.collapsed(
-              offset: textEditingValue.selection.end,
-            ),
-          ),
-          cause,
-        );
-
-        return;
-      }
-    }
-
     // Snapshot the input before using `await`.
     // See https://github.com/flutter/flutter/issues/11427
     final plainText = await Clipboard.getData(Clipboard.kTextPlain);
